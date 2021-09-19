@@ -1,4 +1,33 @@
+An overview of DBCs
+A DBC is a unique ‘digital voucher’ that has value by virtue of the fact it has been provably issued by a trusted mint as part of an economic system. To spend a DBC you need to get it reissued by a mint. The mint can take your DBC and reissue it as two or more new DBCs if you wish (e.g. payment to a shop, the remainder as change to you), and multiple DBCs can be reissued as a single DBC.
 
+The important thing for us is that DBCs provide a quick, safe, flexible way to make payments that is compatible with multisig/threshold signature cryptography and can be used online and offline. They simplify many aspects of the Safe Network economy.
+
+The current state of affairs
+Currently our DBC system involves the following:
+
+Sharding: The mint is sharded between sections, such that every section is responsible for reissuing only certain DBCs, determined by the DBC name/id.
+
+Decentralised Mint Nodes: Within a section, individual mint nodes (Elders) operate autonomously, without coordination. A Client performing a reissue operation must obtain a ReissueShare from a supermajority of mint nodes (at least 5 of 7). Each ReissueShare contains a BLS SignatureShare. The client combines these SignatureShare to obtain a full Signature. The Client adds this Signature to the DBC contents to form a complete DBC, ready for spending.
+
+DBC Ownership: Each DBC has an owner, identified by a PublicKey. This enables DBCs to be stored and transferred in cleartext without anyone stealing them. The mint verifies that the owner has properly signed each input DBC when it is spent (reissued).
+
+Amount hiding: DBC amounts are hidden such that only the sender and receiver can know it. Not even the mint nodes can see the amount. Yet the mint can verify that the sum of input DBCs matches the sum of output DBCs through the use of Pedersen commitments and rangeproofs (bulletproofs).
+
+Spentbook: Each Mint node writes to a Spentbook. During each reissue the mint node will first verify that all input DBCs are not already in the Spentbook (have not been spent) and that all signatures and outputs are correct. It then records each input as spent in the Spentbook. Ideally we want to move this to the client, see below.
+
+Future Improvements
+We’re still looking at where we can make enhancements to the DBC system, and the following are all under consideration:
+
+One time keys: The mint nodes would enforce that each public key can only be used in a single reissue transaction. This can help with privacy because it prevents keys being used in multiple transactions.
+
+Client writes to Spentbook: With this setup, the client would write Spentbook entries before contacting the mint. The benefit of this is that the reissue call becomes idempotent, meaning that a client could make the same reissue call many times and receive the same response each time.
+
+Blind Signatures: This would bring us a true ownerless “bearer” certificate. A pure form of untraceable digital cash, if you will.
+
+Public Spentbook: Making the Spentbook public is considered desirable/necessary for the public to audit the money supply, i.e. to verify that additional money has not been created either through fraud/theft or bugs/errors.
+
+For anyone interested in diving deeper, our DBC code is in the sn_dbc crate 12.
 
 Unlinkability
 So why is it important for a monetary token to be unlinkable? In short, because that is the technical means to achieve the more general and highly desirable monetary property 1 of fungibility 1. Fungibility means that one token is interchangeable with another.
